@@ -3,6 +3,7 @@
 #include "ControlFlowGraph.h"
 #include "LivenessAnalysis.h"
 #include "InterferenceGraph.h"
+#include "ResourceAllocation.h"
 
 #include <iostream>
 #include <exception>
@@ -86,6 +87,11 @@ int main()
         InterferenceGraph ig(syn.getVariables(), syn.getInstructions());
         ig.Do();
         ig.printGraph();
+
+        // Resource Allocation
+        ResourceAllocation ra(ig);
+        ra.Do();
+        ra.printAllocation();
     }
     catch (runtime_error e)
     {
