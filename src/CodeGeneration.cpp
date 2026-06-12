@@ -155,6 +155,42 @@ void CodeGeneration::generateText(ofstream &out)
         case I_NOP:
             out << "\tnop" << endl;
             break;
+        case I_MUL:
+        {
+            auto it = instr->getSrc().begin();
+            ++it;
+            Variable *src2 = *it;
+
+            out << "\tmul "
+                << getRegisterName(dst) << ", "
+                << getRegisterName(src1) << ", "
+                << getRegisterName(src2) << endl;
+            break;
+        }
+        case I_AND:
+        {
+            auto it = instr->getSrc().begin();
+            ++it;
+            Variable *src2 = *it;
+
+            out << "\tand "
+                << getRegisterName(dst) << ", "
+                << getRegisterName(src1) << ", "
+                << getRegisterName(src2) << endl;
+            break;
+        }
+        case I_BEQ:
+        {
+            auto it = instr->getSrc().begin();
+            ++it;
+            Variable *src2 = *it;
+
+            out << "\tbeq "
+                << getRegisterName(src1) << ", "
+                << getRegisterName(src2) << ", "
+                << instr->getBranchLabel() << endl;
+            break;
+        }
         default:
             break;
         }

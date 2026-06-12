@@ -149,12 +149,24 @@ void SyntaxAnalysis::S()
     }
     else if (currentType() == T_ID)
     {
-        string label = currentValue();
-        eat(T_ID);
-        eat(T_COL);
+        string value = currentValue();
 
-        nextLabel = label;
-        E();
+        if (value == "mul" ||
+            value == "and" ||
+            value == "beq")
+        {
+            E();
+        }
+        else
+        {
+            string label = value;
+
+            eat(T_ID);
+            eat(T_COL);
+
+            nextLabel = label;
+            E();
+        }
     }
     else
         E();
@@ -183,6 +195,83 @@ void SyntaxAnalysis::E()
     {
         instr->setLabelName(nextLabel);
         nextLabel = "";
+    }
+
+    if (currentType() == T_ID)
+    {
+        string value = currentValue();
+
+        if (value == "mul")
+        {
+            eat(T_ID);
+            instr->setType(I_MUL);
+
+            string dstName = currentValue();
+            eat(T_R_ID);
+            eat(T_COMMA);
+
+            string src1Name = currentValue();
+            eat(T_R_ID);
+            eat(T_COMMA);
+
+            string src2Name = currentValue();
+            eat(T_R_ID);
+
+            instr->getDst().push_back(findVariable(dstName));
+            instr->getSrc().push_back(findVariable(src1Name));
+            instr->getSrc().push_back(findVariable(src2Name));
+
+            instructions.push_back(instr);
+            return;
+        }
+
+        if (value == "and")
+        {
+            eat(T_ID);
+            instr->setType(I_AND);
+
+            string dstName = currentValue();
+            eat(T_R_ID);
+            eat(T_COMMA);
+
+            string src1Name = currentValue();
+            eat(T_R_ID);
+            eat(T_COMMA);
+
+            string src2Name = currentValue();
+            eat(T_R_ID);
+
+            instr->getDst().push_back(findVariable(dstName));
+            instr->getSrc().push_back(findVariable(src1Name));
+            instr->getSrc().push_back(findVariable(src2Name));
+
+            instructions.push_back(instr);
+            return;
+        }
+
+        if (value == "beq")
+        {
+            eat(T_ID);
+            instr->setType(I_BEQ);
+
+            string src1Name = currentValue();
+            eat(T_R_ID);
+            eat(T_COMMA);
+
+            string src2Name = currentValue();
+            eat(T_R_ID);
+            eat(T_COMMA);
+
+            string label = currentValue();
+            eat(T_ID);
+
+            instr->getSrc().push_back(findVariable(src1Name));
+            instr->getSrc().push_back(findVariable(src2Name));
+            instr->setBranchLabel(label);
+
+            instructions.push_back(instr);
+            return;
+        }
     }
 
     switch (currentType())
