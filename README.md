@@ -16,6 +16,7 @@ The following components were implemented as part of this project:
 3.  Interference Graph
 4.  Resource Allocation
 5.  Code Generation
+6.  Three Custom Instructions
 
 The lexical analysis component (tokenizer + finite state machine) 
 was provided as starter code.
