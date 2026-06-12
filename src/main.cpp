@@ -4,6 +4,7 @@
 #include "LivenessAnalysis.h"
 #include "InterferenceGraph.h"
 #include "ResourceAllocation.h"
+#include "CodeGeneration.h"
 
 #include <iostream>
 #include <exception>
@@ -92,6 +93,12 @@ int main()
         ResourceAllocation ra(ig);
         ra.Do();
         ra.printAllocation();
+
+        CodeGeneration g(syn.getVariables(),
+                         syn.getInstructions(),
+                         syn.getFunctionName(),
+                         "../output/output.s");
+        g.Do();
     }
     catch (runtime_error e)
     {
