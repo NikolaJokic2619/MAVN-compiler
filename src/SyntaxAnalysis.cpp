@@ -137,7 +137,7 @@ void SyntaxAnalysis::S()
         string varName = currentValue();
         eat(T_R_ID);
 
-        Variable *var = new Variable(varName, instructionPosition++, Variable::MEM_VAR);
+        Variable *var = new Variable(varName, instructionPosition++, Variable::REG_VAR);
         variables.push_back(var);
     }
     else if (currentType() == T_FUNC)

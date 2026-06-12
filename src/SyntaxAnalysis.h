@@ -24,6 +24,8 @@ public:
     Instructions &getInstructions() { return instructions; }
     std::string getFunctionName() { return functionName; }
 
+    Token getErrorToken() { return errorToken; }
+
     void printSyntaxError(Token token);
 
 private:

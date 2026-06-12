@@ -1,4 +1,5 @@
 #include "LexicalAnalysis.h"
+#include "SyntaxAnalysis.h"
 
 #include <iostream>
 #include <exception>
@@ -30,6 +31,42 @@ int main()
         {
             lex.printLexError();
             throw runtime_error("\nException! Lexical analysis failed!\n");
+        }
+
+        SyntaxAnalysis syn(lex.getTokenList());
+
+        retVal = syn.Do();
+
+        if (retVal)
+        {
+            cout << "Syntax analysis finished successfully!" << endl;
+        }
+        else
+        {
+            syn.printSyntaxError(syn.getErrorToken());
+            throw runtime_error("\nException! Syntax analysis failed!\n");
+        }
+
+        // Syntax Anlysis result
+        cout << "Function: " << syn.getFunctionName() << endl;
+
+        cout << syn.getInstructions().size() << " Instructions" << endl;
+
+        cout << syn.getVariables().size() << " Variables" << endl;
+
+        cout << "Variables: " << endl;
+
+        for (Variable *v : syn.getVariables())
+        {
+            cout << v->getName();
+            if (v->getType() == Variable::MEM_VAR)
+            {
+                cout << " mem = " << v->getValue() << endl;
+            }
+            else
+            {
+                cout << " reg" << endl;
+            }
         }
     }
     catch (runtime_error e)
