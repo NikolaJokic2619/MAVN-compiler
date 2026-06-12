@@ -179,7 +179,7 @@ void SyntaxAnalysis::E()
     Instruction *instr = new Instruction();
     instr->setPosition(instructionPosition++);
 
-    if (nextLabel.empty())
+    if (!nextLabel.empty())
     {
         instr->setLabelName(nextLabel);
         nextLabel = "";
