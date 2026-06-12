@@ -2,6 +2,7 @@
 #include "SyntaxAnalysis.h"
 #include "ControlFlowGraph.h"
 #include "LivenessAnalysis.h"
+#include "InterferenceGraph.h"
 
 #include <iostream>
 #include <exception>
@@ -80,6 +81,11 @@ int main()
         LivenessAnalysis liveness(syn.getInstructions());
         liveness.Do();
         liveness.printSets();
+
+        // Interference Graph
+        InterferenceGraph ig(syn.getVariables(), syn.getInstructions());
+        ig.Do();
+        ig.printGraph();
     }
     catch (runtime_error e)
     {
