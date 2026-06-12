@@ -1,5 +1,7 @@
 #include "LexicalAnalysis.h"
 #include "SyntaxAnalysis.h"
+#include "ControlFlowGraph.h"
+#include "LivenessAnalysis.h"
 
 #include <iostream>
 #include <exception>
@@ -48,13 +50,13 @@ int main()
         }
 
         // Syntax Anlysis result
-        cout << "Function: " << syn.getFunctionName() << endl;
+        cout << "\nFunction: " << syn.getFunctionName() << endl;
 
         cout << syn.getInstructions().size() << " Instructions" << endl;
 
         cout << syn.getVariables().size() << " Variables" << endl;
 
-        cout << "Variables: " << endl;
+        cout << "\nVariables: " << endl;
 
         for (Variable *v : syn.getVariables())
         {
@@ -68,6 +70,16 @@ int main()
                 cout << " reg" << endl;
             }
         }
+
+        // Control Graph Flow
+        ControlFlowGraph cfg(syn.getInstructions());
+        cfg.Do();
+        cfg.printGraph();
+
+        // Liveness Analysis
+        LivenessAnalysis liveness(syn.getInstructions());
+        liveness.Do();
+        liveness.printSets();
     }
     catch (runtime_error e)
     {

@@ -64,6 +64,12 @@ public:
     Variables &getDef() { return m_def; }
     Variables &getIn() { return m_in; }
     Variables &getOut() { return m_out; }
+    int getOffset() { return m_offset; }
+    std::string getLabelName() { return m_labelName; }
+    std::string getBranchLabel() { return m_branchLabel; }
+
+    std::list<Instruction *> &getSucc() { return m_succ; }
+    std::list<Instruction *> &getPred() { return m_pred; }
 
     // Setters
     void setPosition(int p) { m_position = p; }
