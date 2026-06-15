@@ -80,13 +80,12 @@ void CodeGeneration::generateText(ofstream &out)
             out << instr->getLabelName() << ":" << endl;
         }
 
-        Variable *dst = instr->getDst().front();
-        Variable *src1 = instr->getSrc().front();
-
         switch (instr->getType())
         {
         case I_ADD:
         {
+            Variable *dst = instr->getDst().front();
+            Variable *src1 = instr->getSrc().front();
             auto it = instr->getSrc().begin();
             ++it;
             Variable *src2 = *it;
@@ -98,13 +97,20 @@ void CodeGeneration::generateText(ofstream &out)
             break;
         }
         case I_ADDI:
+        {
+            Variable *dst = instr->getDst().front();
+            Variable *src1 = instr->getSrc().front();
+
             out << "\taddi\t"
                 << getRegisterName(dst) << ", "
                 << getRegisterName(src1) << ", "
                 << instr->getOffset() << endl;
             break;
+        }
         case I_SUB:
         {
+            Variable *dst = instr->getDst().front();
+            Variable *src1 = instr->getSrc().front();
             auto it = instr->getSrc().begin();
             ++it;
             Variable *src2 = *it;
@@ -116,23 +122,38 @@ void CodeGeneration::generateText(ofstream &out)
             break;
         }
         case I_LA:
+        {
+            Variable *dst = instr->getDst().front();
+            Variable *src1 = instr->getSrc().front();
+
             out << "\tla\t"
                 << getRegisterName(dst) << ", "
                 << src1->getName() << endl;
             break;
+        }
         case I_LI:
+        {
+            Variable *dst = instr->getDst().front();
+
             out << "\tli\t"
                 << getRegisterName(dst) << ", "
                 << instr->getOffset() << endl;
             break;
+        }
         case I_LW:
+        {
+            Variable *dst = instr->getDst().front();
+            Variable *src1 = instr->getSrc().front();
+
             out << "\tlw\t"
                 << getRegisterName(dst) << ", "
                 << instr->getOffset()
                 << "(" << getRegisterName(src1) << ")" << endl;
             break;
+        }
         case I_SW:
         {
+            Variable *src1 = instr->getSrc().front();
             auto it = instr->getSrc().begin();
             ++it;
             Variable *base = *it;
@@ -144,24 +165,32 @@ void CodeGeneration::generateText(ofstream &out)
             break;
         }
         case I_BLTZ:
+        {
+            Variable *src1 = instr->getSrc().front();
+
             out << "\tbltz\t"
                 << getRegisterName(src1) << ", "
                 << instr->getBranchLabel() << endl;
             break;
+        }
         case I_B:
             out << "\tb\t"
                 << instr->getBranchLabel() << endl;
             break;
+
         case I_NOP:
             out << "\tnop" << endl;
             break;
+
         case I_MUL:
         {
+            Variable *dst = instr->getDst().front();
+            Variable *src1 = instr->getSrc().front();
             auto it = instr->getSrc().begin();
             ++it;
             Variable *src2 = *it;
 
-            out << "\tmul "
+            out << "\tmul\t"
                 << getRegisterName(dst) << ", "
                 << getRegisterName(src1) << ", "
                 << getRegisterName(src2) << endl;
@@ -169,11 +198,13 @@ void CodeGeneration::generateText(ofstream &out)
         }
         case I_AND:
         {
+            Variable *dst = instr->getDst().front();
+            Variable *src1 = instr->getSrc().front();
             auto it = instr->getSrc().begin();
             ++it;
             Variable *src2 = *it;
 
-            out << "\tand "
+            out << "\tand\t"
                 << getRegisterName(dst) << ", "
                 << getRegisterName(src1) << ", "
                 << getRegisterName(src2) << endl;
@@ -181,11 +212,12 @@ void CodeGeneration::generateText(ofstream &out)
         }
         case I_BEQ:
         {
+            Variable *src1 = instr->getSrc().front();
             auto it = instr->getSrc().begin();
             ++it;
             Variable *src2 = *it;
 
-            out << "\tbeq "
+            out << "\tbeq\t"
                 << getRegisterName(src1) << ", "
                 << getRegisterName(src2) << ", "
                 << instr->getBranchLabel() << endl;
