@@ -21,7 +21,7 @@ int main()
         LexicalAnalysis lex;
 
         if (!lex.readInputFile(fileName))
-            throw runtime_error("\nException! Failed to open input file!\n");
+            throw runtime_error("\nException! LEXICAL ERROR DETECTED!\n");
 
         lex.initialize();
 
@@ -49,7 +49,7 @@ int main()
         else
         {
             syn.printSyntaxError(syn.getErrorToken());
-            throw runtime_error("\nException! Syntax analysis failed!\n");
+            throw runtime_error("\nException! SYNTAX ERROR DETECTED!\n");
         }
 
         // Syntax Anlysis result

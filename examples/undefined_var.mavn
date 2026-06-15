@@ -1,0 +1,5 @@
+_mem m1 6;
+_reg r1;
+_func main;
+
+la r2, m1;
