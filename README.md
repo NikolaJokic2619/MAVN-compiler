@@ -17,6 +17,7 @@ The following components were implemented as part of this project:
 4.  Resource Allocation
 5.  Code Generation
 6.  Three Custom Instructions
+7.  Spilling
 
 The lexical analysis component (tokenizer + finite state machine) 
 was provided as starter code.
@@ -25,6 +26,7 @@ was provided as starter code.
 
 src/        - source code
 examples/   - example .mavn input files
+output/     - output file
 doc/        - project documentation
 
 ## Build
