@@ -37,7 +37,7 @@ void ControlFlowGraph::Do()
             (*next)->getPred().push_back(current);
         }
 
-        if (current->getType() == I_B || current->getType() == I_BLTZ)
+        if (current->getType() == I_B || current->getType() == I_BLTZ || current->getType() == I_BEQ)
         {
             string target = current->getBranchLabel();
             if (labelMap.find(target) != labelMap.end())
