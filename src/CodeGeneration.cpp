@@ -4,7 +4,8 @@
 
 using namespace std;
 
-CodeGeneration::CodeGeneration(Variables &vars, Instructions &instrs, string functionName, string out) : variables(vars), instructions(instrs), function(functionName), output(out) {}
+CodeGeneration::CodeGeneration(Variables &vars, Instructions &instrs, string functionName, string out)
+    : variables(vars), instructions(instrs), function(functionName), output(out) {}
 
 void CodeGeneration::Do()
 {
@@ -40,6 +41,27 @@ string CodeGeneration::getRegisterName(Variable *var)
     }
 }
 
+string CodeGeneration::getOperand(Variable *var)
+{
+    // prosuta promenljiva uvek "zivi" privremeno u rezervisanom $t3
+    if (var->isSpilled())
+        return "$t3";
+
+    return getRegisterName(var);
+}
+
+void CodeGeneration::emitSpillLoad(ofstream &out, Variable *var)
+{
+    if (var->isSpilled())
+        out << "\tlw\t$t3, " << var->getSpillLabel() << endl;
+}
+
+void CodeGeneration::emitSpillStore(ofstream &out, Variable *var)
+{
+    if (var->isSpilled())
+        out << "\tsw\t$t3, " << var->getSpillLabel() << endl;
+}
+
 void CodeGeneration::generateData(ofstream &out)
 {
     out << ".globl " << function << endl
@@ -52,6 +74,13 @@ void CodeGeneration::generateData(ofstream &out)
             out << var->getName() << ":\t.word " << var->getValue() << endl;
     }
 
+    // rezervisi memorijski slot za svaku prosutu (spilled) registarsku promenljivu
+    for (Variable *var : variables)
+    {
+        if (var->getType() == Variable::REG_VAR && var->isSpilled())
+            out << var->getSpillLabel() << ":\t.word 0" << endl;
+    }
+
     out << endl;
 }
 
@@ -60,19 +89,6 @@ void CodeGeneration::generateText(ofstream &out)
     out << ".text" << endl;
     out << function << ":" << endl;
 
-    /*
-        I_NO_TYPE = 0,
-        I_ADD,
-        I_ADDI,
-        I_SUB,
-        I_LA,
-        I_LI,
-        I_LW,
-        I_SW,
-        I_BLTZ,
-        I_B,
-        I_NOP
-    */
     for (Instruction *instr : instructions)
     {
         if (instr->getLabelName() != "")
@@ -90,10 +106,13 @@ void CodeGeneration::generateText(ofstream &out)
             ++it;
             Variable *src2 = *it;
 
-            out << "\tadd\t"
-                << getRegisterName(dst) << ", "
-                << getRegisterName(src1) << ", "
-                << getRegisterName(src2) << endl;
+            emitSpillLoad(out, src1);
+            emitSpillLoad(out, src2);
+
+            out << "\tadd\t" << getOperand(dst) << ", "
+                << getOperand(src1) << ", " << getOperand(src2) << endl;
+
+            emitSpillStore(out, dst);
             break;
         }
         case I_ADDI:
@@ -101,10 +120,12 @@ void CodeGeneration::generateText(ofstream &out)
             Variable *dst = instr->getDst().front();
             Variable *src1 = instr->getSrc().front();
 
-            out << "\taddi\t"
-                << getRegisterName(dst) << ", "
-                << getRegisterName(src1) << ", "
-                << instr->getOffset() << endl;
+            emitSpillLoad(out, src1);
+
+            out << "\taddi\t" << getOperand(dst) << ", "
+                << getOperand(src1) << ", " << instr->getOffset() << endl;
+
+            emitSpillStore(out, dst);
             break;
         }
         case I_SUB:
@@ -115,10 +136,13 @@ void CodeGeneration::generateText(ofstream &out)
             ++it;
             Variable *src2 = *it;
 
-            out << "\tsub\t"
-                << getRegisterName(dst) << ", "
-                << getRegisterName(src1) << ", "
-                << getRegisterName(src2) << endl;
+            emitSpillLoad(out, src1);
+            emitSpillLoad(out, src2);
+
+            out << "\tsub\t" << getOperand(dst) << ", "
+                << getOperand(src1) << ", " << getOperand(src2) << endl;
+
+            emitSpillStore(out, dst);
             break;
         }
         case I_LA:
@@ -126,18 +150,18 @@ void CodeGeneration::generateText(ofstream &out)
             Variable *dst = instr->getDst().front();
             Variable *src1 = instr->getSrc().front();
 
-            out << "\tla\t"
-                << getRegisterName(dst) << ", "
-                << src1->getName() << endl;
+            out << "\tla\t" << getOperand(dst) << ", " << src1->getName() << endl;
+
+            emitSpillStore(out, dst);
             break;
         }
         case I_LI:
         {
             Variable *dst = instr->getDst().front();
 
-            out << "\tli\t"
-                << getRegisterName(dst) << ", "
-                << instr->getOffset() << endl;
+            out << "\tli\t" << getOperand(dst) << ", " << instr->getOffset() << endl;
+
+            emitSpillStore(out, dst);
             break;
         }
         case I_LW:
@@ -145,10 +169,12 @@ void CodeGeneration::generateText(ofstream &out)
             Variable *dst = instr->getDst().front();
             Variable *src1 = instr->getSrc().front();
 
-            out << "\tlw\t"
-                << getRegisterName(dst) << ", "
-                << instr->getOffset()
-                << "(" << getRegisterName(src1) << ")" << endl;
+            emitSpillLoad(out, src1);
+
+            out << "\tlw\t" << getOperand(dst) << ", " << instr->getOffset()
+                << "(" << getOperand(src1) << ")" << endl;
+
+            emitSpillStore(out, dst);
             break;
         }
         case I_SW:
@@ -158,24 +184,25 @@ void CodeGeneration::generateText(ofstream &out)
             ++it;
             Variable *base = *it;
 
-            out << "\tsw\t"
-                << getRegisterName(src1) << ", "
-                << instr->getOffset()
-                << "(" << getRegisterName(base) << ")" << endl;
+            emitSpillLoad(out, src1);
+            emitSpillLoad(out, base);
+
+            out << "\tsw\t" << getOperand(src1) << ", " << instr->getOffset()
+                << "(" << getOperand(base) << ")" << endl;
             break;
         }
         case I_BLTZ:
         {
             Variable *src1 = instr->getSrc().front();
 
-            out << "\tbltz\t"
-                << getRegisterName(src1) << ", "
+            emitSpillLoad(out, src1);
+
+            out << "\tbltz\t" << getOperand(src1) << ", "
                 << instr->getBranchLabel() << endl;
             break;
         }
         case I_B:
-            out << "\tb\t"
-                << instr->getBranchLabel() << endl;
+            out << "\tb\t" << instr->getBranchLabel() << endl;
             break;
 
         case I_NOP:
@@ -190,10 +217,13 @@ void CodeGeneration::generateText(ofstream &out)
             ++it;
             Variable *src2 = *it;
 
-            out << "\tmul\t"
-                << getRegisterName(dst) << ", "
-                << getRegisterName(src1) << ", "
-                << getRegisterName(src2) << endl;
+            emitSpillLoad(out, src1);
+            emitSpillLoad(out, src2);
+
+            out << "\tmul\t" << getOperand(dst) << ", "
+                << getOperand(src1) << ", " << getOperand(src2) << endl;
+
+            emitSpillStore(out, dst);
             break;
         }
         case I_AND:
@@ -204,10 +234,13 @@ void CodeGeneration::generateText(ofstream &out)
             ++it;
             Variable *src2 = *it;
 
-            out << "\tand\t"
-                << getRegisterName(dst) << ", "
-                << getRegisterName(src1) << ", "
-                << getRegisterName(src2) << endl;
+            emitSpillLoad(out, src1);
+            emitSpillLoad(out, src2);
+
+            out << "\tand\t" << getOperand(dst) << ", "
+                << getOperand(src1) << ", " << getOperand(src2) << endl;
+
+            emitSpillStore(out, dst);
             break;
         }
         case I_BEQ:
@@ -217,10 +250,11 @@ void CodeGeneration::generateText(ofstream &out)
             ++it;
             Variable *src2 = *it;
 
-            out << "\tbeq\t"
-                << getRegisterName(src1) << ", "
-                << getRegisterName(src2) << ", "
-                << instr->getBranchLabel() << endl;
+            emitSpillLoad(out, src1);
+            emitSpillLoad(out, src2);
+
+            out << "\tbeq\t" << getOperand(src1) << ", "
+                << getOperand(src2) << ", " << instr->getBranchLabel() << endl;
             break;
         }
         default:

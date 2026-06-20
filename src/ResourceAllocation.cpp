@@ -2,17 +2,19 @@
 
 using namespace std;
 
+const int NORMAL_COLORS = __REG_NUMBER__ - 1;
+
 ResourceAllocation::ResourceAllocation(InterferenceGraph &ig) : interferenceGraph(ig) {}
 
 Regs ResourceAllocation::getColor(Variable *notColoredVar)
 {
-    Regs availableRegs[4] = {t0, t1, t2, t3};
+    Regs availableRegs[3] = {t0, t1, t2};
 
-    bool usedRegs[__REG_NUMBER__];
+    bool usedRegs[NORMAL_COLORS];
 
     Variables &vars = interferenceGraph.getRegVariables();
 
-    for (int r = 0; r < __REG_NUMBER__; r++)
+    for (int r = 0; r < NORMAL_COLORS; r++)
     {
         usedRegs[r] = false;
     }
@@ -22,13 +24,17 @@ Regs ResourceAllocation::getColor(Variable *notColoredVar)
         if (var == notColoredVar)
             continue;
 
+        // promenljive koje su vec prosute u memoriju ne zauzimaju registar
+        if (var->isSpilled())
+            continue;
+
         if (interferenceGraph.hasConnection(notColoredVar, var))
         {
             Regs assigned = var->getAssignment();
 
             if (assigned != no_assign)
             {
-                for (int i = 0; i < __REG_NUMBER__; i++)
+                for (int i = 0; i < NORMAL_COLORS; i++)
                 {
                     if (assigned == availableRegs[i])
                     {
@@ -39,7 +45,7 @@ Regs ResourceAllocation::getColor(Variable *notColoredVar)
         }
     }
 
-    for (int i = 0; i < __REG_NUMBER__; i++)
+    for (int i = 0; i < NORMAL_COLORS; i++)
     {
         if (usedRegs[i] == false)
         {
@@ -62,31 +68,47 @@ void ResourceAllocation::Do()
     Variable *current, *previous;
     previous = NULL;
 
+    int spillCount = 0;
+
     while (!simplificationStack.empty())
     {
         current = simplificationStack.top();
         simplificationStack.pop();
 
+        Regs color;
+
         if (previous == NULL)
         {
-            current->setAssignment((Regs)t0);
+            color = t0;
         }
         else
         {
-            Regs color = getColor(current);
-            if (color == no_assign)
-            {
-                cout << "Resource allocation failed!" << endl;
-                return;
-            }
-            else
-            {
-                current->setAssignment(color);
-            }
+            color = getColor(current);
+        }
+
+        if (color == no_assign)
+        {
+            // nema slobodnog registra -> SPILL u memoriju umesto da odustanemo
+            current->setSpilled(true);
+            current->setAssignment(no_assign);
+            current->setSpillLabel("spill_" + current->getName());
+            spillCount++;
+
+            cout << "Variable [" << current->getName() << "] spilled to memory ("
+                 << current->getSpillLabel() << ")" << endl;
+        }
+        else
+        {
+            current->setAssignment(color);
         }
 
         previous = current;
     }
+
+    if (spillCount > 0)
+        cout << "\nResource allocation completed WITH " << spillCount << " spill(s)." << endl;
+    else
+        cout << "\nResource allocation completed successfully, no spills needed." << endl;
 }
 
 void ResourceAllocation::printAllocation()
@@ -97,23 +119,30 @@ void ResourceAllocation::printAllocation()
     {
         cout << v->getName() << ": ";
 
-        switch (v->getAssignment())
+        if (v->isSpilled())
         {
-        case t0:
-            cout << "t0";
-            break;
-        case t1:
-            cout << "t1";
-            break;
-        case t2:
-            cout << "t2";
-            break;
-        case t3:
-            cout << "t3";
-            break;
-        default:
-            cout << "ERROR: UNASSIGNED REG!";
-            break;
+            cout << "SPILLED -> " << v->getSpillLabel();
+        }
+        else
+        {
+            switch (v->getAssignment())
+            {
+            case t0:
+                cout << "t0";
+                break;
+            case t1:
+                cout << "t1";
+                break;
+            case t2:
+                cout << "t2";
+                break;
+            case t3:
+                cout << "t3";
+                break;
+            default:
+                cout << "ERROR: UNASSIGNED REG!";
+                break;
+            }
         }
 
         cout << endl;

@@ -1,5 +1,6 @@
 #include <iostream>
 #include <iomanip>
+#include <map>
 
 #include "ControlFlowGraph.h"
 
@@ -9,20 +10,47 @@ ControlFlowGraph::ControlFlowGraph(Instructions &instructions) : instructions_cf
 
 void ControlFlowGraph::Do()
 {
-    if (!instructions_cfg.empty())
+    if (instructions_cfg.empty())
+        return;
+
+    map<string, Instruction *> labelMap;
+
+    for (Instruction *instr : instructions_cfg)
     {
-        auto it = instructions_cfg.begin();
-        auto next = it;
-        ++next;
-
-        while (next != instructions_cfg.end())
+        if (instr->getLabelName() != "")
         {
-            (*it)->getSucc().push_back(*next);
-            (*next)->getPred().push_back(*it);
-
-            ++it;
-            ++next;
+            labelMap[instr->getLabelName()] = instr;
         }
+    }
+
+    auto it = instructions_cfg.begin();
+    auto next = it;
+    ++next;
+
+    while (next != instructions_cfg.end())
+    {
+        Instruction *current = *it;
+
+        if (next != instructions_cfg.end() && current->getType() != I_B)
+        {
+            current->getSucc().push_back(*next);
+            (*next)->getPred().push_back(current);
+        }
+
+        if (current->getType() == I_B || current->getType() == I_BLTZ)
+        {
+            string target = current->getBranchLabel();
+            if (labelMap.find(target) != labelMap.end())
+            {
+                Instruction *targetInstr = labelMap[target];
+                current->getSucc().push_back(targetInstr);
+                targetInstr->getPred().push_back(current);
+            }
+        }
+
+        ++it;
+        if (next != instructions_cfg.end())
+            ++next;
     }
 }
 

@@ -79,6 +79,8 @@ void LivenessAnalysis::findInOut()
 
     while (changed)
     {
+        changed = false;
+
         for (auto it = instructions_liveness.rbegin(); it != instructions_liveness.rend(); ++it)
         {
             Instruction *instr = *it;
@@ -102,8 +104,8 @@ void LivenessAnalysis::findInOut()
                 }
             }
 
-            if (oldIn == instr->getIn() || oldOut == instr->getOut())
-                changed = false;
+            if (oldIn != instr->getIn() || oldOut != instr->getOut())
+                changed = true;
         }
     }
 }

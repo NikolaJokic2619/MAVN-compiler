@@ -25,6 +25,8 @@ public:
     int getPosition() { return m_position; }
     Regs getAssignment() { return m_assignment; }
     int getValue() { return m_value; }
+    std::string getSpillLabel() { return m_spillLabel; }
+    bool isSpilled() { return m_spilled; }
 
     // Seters
     void setType(VariableType t) { m_type = t; }
@@ -32,6 +34,8 @@ public:
     void setPosition(int p) { m_position = p; }
     void setAssignment(Regs r) { m_assignment = r; }
     void setValue(int v) { m_value = v; }
+    void setSpilled(bool s) { m_spilled = s; }
+    void setSpillLabel(std::string label) { m_spillLabel = label; }
 
 private:
     VariableType m_type;
@@ -39,6 +43,8 @@ private:
     int m_position;
     Regs m_assignment;
     int m_value;
+    bool m_spilled = false;
+    std::string m_spillLabel = "";
 };
 
 /**
