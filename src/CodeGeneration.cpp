@@ -1,6 +1,5 @@
 #include "CodeGeneration.h"
 #include <iterator>
-#include <filesystem>
 
 using namespace std;
 
@@ -9,7 +8,6 @@ CodeGeneration::CodeGeneration(Variables &vars, Instructions &instrs, string fun
 
 void CodeGeneration::Do()
 {
-    filesystem::create_directory("../output");
     ofstream out(output);
 
     if (!out.is_open())

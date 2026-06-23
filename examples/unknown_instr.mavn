@@ -1,6 +1,15 @@
 _mem m1 6;
+_mem m2 6;
 _reg r1;
 _reg r2;
+_reg r3;
+_reg r4;
 _func main;
+
+la r3, m1;
+lw r1, 0(r3);
+
+la r4, m2;
+lw r2, 0(r4);
 
 div r1, r2;
